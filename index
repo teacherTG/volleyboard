@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volleyball Scoreboard Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; 
+            color: white;
+            user-select: none;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 다이내믹 팀 색상 스타일 */
+        .theme-red { border-top-color: #ef4444; }
+        .theme-blue { border-top-color: #3b82f6; }
+        .theme-yellow { border-top-color: #eab308; }
+        .theme-green { border-top-color: #22c55e; }
+
+        .text-theme-red { color: #f87171; }
+        .text-theme-blue { color: #60a5fa; }
+        .text-theme-yellow { color: #facc15; }
+        .text-theme-green { color: #4ade80; }
+
+        .btn-plus-red { background-color: #dc2626; } .btn-plus-red:hover { background-color: #ef4444; }
+        .btn-plus-blue { background-color: #2563eb; } .btn-plus-blue:hover { background-color: #3b82f6; }
+        .btn-plus-yellow { background-color: #ca8a04; color: black !important; } .btn-plus-yellow:hover { background-color: #eab308; }
+        .btn-plus-green { background-color: #16a34a; } .btn-plus-green:hover { background-color: #22c55e; }
+
+        .btn-minus-red { background-color: rgba(127, 29, 29, 0.5); color: #fca5a5; } .btn-minus-red:hover { background-color: rgba(153, 27, 27, 0.8); }
+        .btn-minus-blue { background-color: rgba(30, 58, 138, 0.5); color: #93c5fd; } .btn-minus-blue:hover { background-color: rgba(30, 64, 175, 0.8); }
+        .btn-minus-yellow { background-color: rgba(113, 63, 18, 0.5); color: #fef08a; } .btn-minus-yellow:hover { background-color: rgba(133, 77, 14, 0.8); }
+        .btn-minus-green { background-color: rgba(20, 83, 45, 0.5); color: #86efac; } .btn-minus-green:hover { background-color: rgba(22, 101, 52, 0.8); }
+
+        .serve-badge {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .serve-active {
+            opacity: 1;
+            transform: scale(1);
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(234, 179, 8, 1); }
+        }
+
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        
+        .team-name-input {
+            width: 100%;
+            background: transparent;
+            text-align: center;
+            text-align-last: center; /* select 태그 텍스트 중앙 정렬 */
+            outline: none;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s;
+            padding-bottom: 4px;
+        }
+        .team-name-input:focus { border-bottom: 2px solid rgba(255,255,255,0.3); }
+        select.team-name-input { padding-right: 0; }
+
+        /* 세트별 점수판 테이블 스타일 */
+        .set-score-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 4px;
+            margin-top: auto;
+            margin-bottom: 1rem;
+        }
+        .set-score-table th {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 700;
+            padding-bottom: 4px;
+        }
+        .set-score-table td {
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: white;
+            width: 20%;
+        }
+        .set-score-table td.active-set {
+            background-color: rgba(234, 179, 8, 0.2);
+            border-color: rgba(234, 179, 8, 0.5);
+            color: #facc15;
+        }
+
+        :fullscreen body {
+            padding: 0 !important;
+            margin: 0 !important;
+            justify-content: center;
+            overflow: hidden; 
+        }
+        :fullscreen #main-container {
+            height: 100vh;
+            width: 100vw;
+            max-width: 100% !important; 
+            padding: 2vh 2vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2vh;
+            margin: 0;
+        }
+        :fullscreen .top-controls { margin-bottom: 1vh !important; }
+        :fullscreen #set-display { font-size: 14vh !important; } 
+        :fullscreen .top-controls button { width: 12vh !important; height: 12vh !important; font-size: 6vh !important; }
+        
+        :fullscreen .team-name-input { font-size: 11vh !important; margin-bottom: 0 !important; }
+        :fullscreen .name-wrapper { margin-bottom: 2vh !important; height: 12vh !important; }
+        
+        :fullscreen .bg-gray-900\/60 { padding: 2vh 3vw !important; } 
+        :fullscreen .set-score-text { font-size: 4vh !important; }
+        :fullscreen .set-score-val { font-size: 14vh !important; } 
+        
+        :fullscreen .rally-point { font-size: 52vh !important; line-height: 0.8 !important; margin: auto 0 !important; } 
+        
+        :fullscreen .point-btn-group button { padding-top: 5vh !important; padding-bottom: 5vh !important; font-size: 9vh !important; }
+        
+        :fullscreen .center-controls { flex-direction: column !important; justify-content: space-evenly; width: 12vw !important; gap: 2vh; }
+        :fullscreen .center-controls button { padding: 3vh 1vw !important; font-size: 3.5vh !important; height: 100%; margin: 0; gap: 1.5vh; }
+        :fullscreen .center-controls button i { font-size: 5vh !important; }
+        
+        :fullscreen .serve-badge { font-size: 3.5vh !important; padding: 2vh 3vw !important; top: 4vh; right: 4vh; transform: scale(1.4); transform-origin: top right; }
+        
+        :fullscreen .set-score-table { margin-bottom: 2vh !important; }
+        :fullscreen .set-score-table td { font-size: 4.5vh !important; padding: 2vh !important; }
+        :fullscreen .set-score-table th { font-size: 2.5vh !important; }
+    </style>
+</head>
+<body class="p-4 relative">
+
+    <div style="position: absolute; top: 15px; left: 15px; z-index: 1000;">
+      <button onclick="toggleFullScreen()" class="bg-black/50 border border-white/30 text-white px-3 py-1.5 text-sm font-bold rounded-lg hover:bg-black/70 transition">
+        <i class="fas fa-expand mr-1"></i> 전체화면
+      </button>
+    </div>
+
+    <div id="main-container" class="w-full flex-1 flex flex-col items-center max-w-7xl mx-auto gap-4 mt-8 md:mt-4">
+        
+        <!-- 세트 표시 (상단) -->
+        <div class="top-controls w-full flex justify-center items-center gap-6 md:gap-12 mb-2">
+            <button onclick="changeSet(-1)" class="w-12 h-12 md:w-16 md:h-16 bg-gray-700 hover:bg-gray-600 rounded-full flex justify-center items-center text-2xl md:text-4xl font-black transition shadow-lg border border-gray-400">
+                &lt;
+            </button>
+            <div id="set-display" class="text-6xl md:text-8xl font-black text-yellow-400 tracking-widest drop-shadow-[0_0_20px_rgba(253,224,71,0.5)]">
+                1 SET
+            </div>
+            <button onclick="changeSet(1)" class="w-12 h-12 md:w-16 md:h-16 bg-gray-700 hover:bg-gray-600 rounded-full flex justify-center items-center text-2xl md:text-4xl font-black transition shadow-lg border border-gray-400">
+                &gt;
+            </button>
+        </div>
+
+        <!-- 점수판 메인 영역 -->
+        <div id="teams-wrapper" class="w-full flex flex-col md:flex-row gap-4 md:gap-6 flex-1 items-stretch">
+            
+            <div id="panel-A" class="glass-panel flex-1 rounded-3xl p-4 md:p-6 flex flex-col items-center border-t-8 theme-red relative shadow-2xl transition-all duration-500 order-1">
+                
+                <div id="serve-badge-A" class="serve-badge absolute top-4 left-4 bg-yellow-500 text-black font-black px-3 py-2 rounded-xl shadow-lg border border-yellow-200 z-10 flex flex-col items-center gap-1">
+                    <div class="flex items-center gap-1 text-xs md:text-sm">
+                        <i class="fas fa-volleyball"></i> SERVE
+                    </div>
+                    <div class="flex items-center justify-center text-sm md:text-base font-bold bg-yellow-600/50 rounded-lg px-3 py-1 min-w-[4rem]">
+                        <span id="server-num-A" class="text-center">1번</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mb-2 justify-center w-full z-20">
+                    <button onclick="setTheme('A', 'red')" class="w-5 h-5 rounded-full bg-red-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                    <button onclick="setTheme('A', 'blue')" class="w-5 h-5 rounded-full bg-blue-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                    <button onclick="setTheme('A', 'yellow')" class="w-5 h-5 rounded-full bg-yellow-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                    <button onclick="setTheme('A', 'green')" class="w-5 h-5 rounded-full bg-green-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                </div>
+
+                <!-- 팀 이름 드롭다운 & 직접입력 -->
+                <div class="name-wrapper w-full flex items-center justify-center relative mb-4 h-16 md:h-20">
+                    <!-- 드롭다운 모드 -->
+                    <div class="relative w-full flex justify-center items-center h-full">
+                        <select id="select-A" onchange="handleNameSelect('A')" class="team-name-input text-theme-red text-5xl md:text-6xl font-black uppercase tracking-widest cursor-pointer appearance-none bg-transparent h-full">
+                            <option value="1반" class="text-black text-2xl">1반</option>
+                            <option value="2반" class="text-black text-2xl">2반</option>
+                            <option value="3반" class="text-black text-2xl">3반</option>
+                            <option value="4반" class="text-black text-2xl">4반</option>
+                            <option value="5반" class="text-black text-2xl">5반</option>
+                            <option value="6반" class="text-black text-2xl">6반</option>
+                            <option value="7반" class="text-black text-2xl">7반</option>
+                            <option value="8반" class="text-black text-2xl">8반</option>
+                            <option value="9반" class="text-black text-2xl">9반</option>
+                            <option value="10반" class="text-black text-2xl">10반</option>
+                            <option value="11반" class="text-black text-2xl">11반</option>
+                            <option value="12반" class="text-black text-2xl">12반</option>
+                            <option value="custom" class="text-black text-2xl font-bold bg-yellow-200">직접입력 ✏️</option>
+                        </select>
+                        <i id="icon-select-A" class="fas fa-chevron-down absolute right-4 text-2xl text-gray-400 pointer-events-none"></i>
+                    </div>
+                    <!-- 직접 입력 모드 (기본 숨김) -->
+                    <input type="text" id="name-A" class="team-name-input text-theme-red text-5xl md:text-6xl font-black uppercase tracking-widest hidden h-full" value="1반" oninput="syncCustomName('A')" spellcheck="false">
+                    <button id="cancel-custom-A" onclick="revertToSelect('A')" class="hidden absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-gray-600 hover:bg-red-500 rounded-full text-white font-bold flex justify-center items-center transition shadow-lg z-10"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="bg-gray-900/60 rounded-2xl w-full p-3 md:p-4 flex justify-between items-center border border-gray-700/50 mb-4 shadow-inner">
+                    <span class="set-score-text text-gray-400 font-bold text-lg md:text-xl tracking-widest pl-2">SET SCORE</span>
+                    <div class="flex items-center justify-end pr-2 md:pr-4 flex-1">
+                        <span id="set-score-A" class="set-score-val text-5xl md:text-6xl font-black text-white text-center tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">0</span>
+                    </div>
+                </div>
+
+                <div id="point-A" class="rally-point text-[10rem] md:text-[16rem] font-black leading-none tabular-nums tracking-tighter mb-2">0</div>
+
+                <table class="set-score-table">
+                    <thead>
+                        <tr><th>1 SET</th><th>2 SET</th><th>3 SET</th><th>4 SET</th><th>5 SET</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="history-A-1" class="active-set">-</td>
+                            <td id="history-A-2">-</td>
+                            <td id="history-A-3">-</td>
+                            <td id="history-A-4">-</td>
+                            <td id="history-A-5">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="point-btn-group flex gap-3 w-full mt-auto">
+                    <button id="btn-minus-A" onclick="changePoint('A', -1)" class="flex-1 btn-minus-red py-4 md:py-6 rounded-2xl font-bold text-4xl md:text-5xl transition shadow-inner">-</button>
+                    <button id="btn-plus-A" onclick="changePoint('A', 1)" class="flex-[2] btn-plus-red text-white py-4 md:py-6 rounded-2xl font-black text-6xl md:text-7xl transition shadow-lg">+</button>
+                </div>
+            </div>
+
+            <div class="center-controls flex md:flex-col justify-center gap-2 md:gap-4 w-full md:w-32 shrink-0 order-2 z-10 flex-wrap md:flex-nowrap">
+                <button onclick="toggleServe()" class="flex-1 md:flex-none bg-orange-600 hover:bg-orange-500 text-white font-black py-2 md:py-6 rounded-xl shadow-lg border-2 border-orange-400 transition text-xs md:text-lg flex flex-col items-center justify-center gap-1">
+                    <i class="fas fa-volleyball"></i>
+                    <span>서브 교대</span>
+                </button>
+                <button onclick="swapCourts()" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-500 text-white font-black py-2 md:py-6 rounded-xl shadow-lg border-2 border-indigo-400 transition text-xs md:text-lg flex flex-col items-center justify-center gap-1">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>코트 교대</span>
+                </button>
+                <button onclick="resetPoints()" class="flex-1 md:flex-none bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 md:py-6 rounded-xl border border-gray-500 transition text-xs md:text-base">
+                    점수 초기화
+                </button>
+                <button onclick="showConfirmModal()" class="flex-1 md:flex-none bg-red-900/80 hover:bg-red-800 text-red-200 font-bold py-2 md:py-6 rounded-xl border border-red-700 transition text-xs md:text-base">
+                    전체 초기화
+                </button>
+            </div>
+
+            <div id="panel-B" class="glass-panel flex-1 rounded-3xl p-4 md:p-6 flex flex-col items-center border-t-8 theme-blue relative shadow-2xl transition-all duration-500 order-3">
+                
+                <div id="serve-badge-B" class="serve-badge absolute top-4 left-4 bg-yellow-500 text-black font-black px-3 py-2 rounded-xl shadow-lg border border-yellow-200 z-10 flex flex-col items-center gap-1">
+                    <div class="flex items-center gap-1 text-xs md:text-sm">
+                        <i class="fas fa-volleyball"></i> SERVE
+                    </div>
+                    <div class="flex items-center justify-center text-sm md:text-base font-bold bg-yellow-600/50 rounded-lg px-3 py-1 min-w-[4rem]">
+                        <span id="server-num-B" class="text-center">1번</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mb-2 justify-center w-full z-20">
+                    <button onclick="setTheme('B', 'red')" class="w-5 h-5 rounded-full bg-red-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                    <button onclick="setTheme('B', 'blue')" class="w-5 h-5 rounded-full bg-blue-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                    <button onclick="setTheme('B', 'yellow')" class="w-5 h-5 rounded-full bg-yellow-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                    <button onclick="setTheme('B', 'green')" class="w-5 h-5 rounded-full bg-green-500 border-2 border-transparent focus:border-white hover:scale-110 transition"></button>
+                </div>
+
+                <!-- 팀 이름 드롭다운 & 직접입력 -->
+                <div class="name-wrapper w-full flex items-center justify-center relative mb-4 h-16 md:h-20">
+                    <div class="relative w-full flex justify-center items-center h-full">
+                        <select id="select-B" onchange="handleNameSelect('B')" class="team-name-input text-theme-blue text-5xl md:text-6xl font-black uppercase tracking-widest cursor-pointer appearance-none bg-transparent h-full">
+                            <option value="1반" class="text-black text-2xl">1반</option>
+                            <option value="2반" class="text-black text-2xl" selected>2반</option>
+                            <option value="3반" class="text-black text-2xl">3반</option>
+                            <option value="4반" class="text-black text-2xl">4반</option>
+                            <option value="5반" class="text-black text-2xl">5반</option>
+                            <option value="6반" class="text-black text-2xl">6반</option>
+                            <option value="7반" class="text-black text-2xl">7반</option>
+                            <option value="8반" class="text-black text-2xl">8반</option>
+                            <option value="9반" class="text-black text-2xl">9반</option>
+                            <option value="10반" class="text-black text-2xl">10반</option>
+                            <option value="11반" class="text-black text-2xl">11반</option>
+                            <option value="12반" class="text-black text-2xl">12반</option>
+                            <option value="custom" class="text-black text-2xl font-bold bg-yellow-200">직접입력 ✏️</option>
+                        </select>
+                        <i id="icon-select-B" class="fas fa-chevron-down absolute right-4 text-2xl text-gray-400 pointer-events-none"></i>
+                    </div>
+                    <input type="text" id="name-B" class="team-name-input text-theme-blue text-5xl md:text-6xl font-black uppercase tracking-widest hidden h-full" value="2반" oninput="syncCustomName('B')" spellcheck="false">
+                    <button id="cancel-custom-B" onclick="revertToSelect('B')" class="hidden absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-gray-600 hover:bg-red-500 rounded-full text-white font-bold flex justify-center items-center transition shadow-lg z-10"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="bg-gray-900/60 rounded-2xl w-full p-3 md:p-4 flex justify-between items-center border border-gray-700/50 mb-4 shadow-inner">
+                    <span class="set-score-text text-gray-400 font-bold text-lg md:text-xl tracking-widest pl-2">SET SCORE</span>
+                    <div class="flex items-center justify-end pr-2 md:pr-4 flex-1">
+                        <span id="set-score-B" class="set-score-val text-5xl md:text-6xl font-black text-white text-center tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">0</span>
+                    </div>
+                </div>
+
+                <div id="point-B" class="rally-point text-[10rem] md:text-[16rem] font-black leading-none tabular-nums tracking-tighter mb-2">0</div>
+
+                <table class="set-score-table">
+                    <thead>
+                        <tr><th>1 SET</th><th>2 SET</th><th>3 SET</th><th>4 SET</th><th>5 SET</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="history-B-1" class="active-set">-</td>
+                            <td id="history-B-2">-</td>
+                            <td id="history-B-3">-</td>
+                            <td id="history-B-4">-</td>
+                            <td id="history-B-5">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="point-btn-group flex gap-3 w-full mt-auto">
+                    <button id="btn-minus-B" onclick="changePoint('B', -1)" class="flex-1 btn-minus-blue py-4 md:py-6 rounded-2xl font-bold text-4xl md:text-5xl transition shadow-inner">-</button>
+                    <button id="btn-plus-B" onclick="changePoint('B', 1)" class="flex-[2] btn-plus-blue text-white py-4 md:py-6 rounded-2xl font-black text-6xl md:text-7xl transition shadow-lg">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 border border-gray-600 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-2xl">
+            <div class="text-2xl font-black text-red-500 mb-2">⚠️ 경고</div>
+            <div class="text-lg text-white mb-8">모든 세트 스코어와 점수를<br>0으로 초기화하시겠습니까?</div>
+            <div class="flex gap-4">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-xl font-bold transition">취소</button>
+                <button onclick="resetAll()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl font-black transition shadow-lg">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let currentSet = 1;
+        let highestSetReached = 1; 
+        let setScores = { A: 0, B: 0 };
+        let points = { A: 0, B: 0 };
+        let currentServe = 'A'; 
+        let currentServer = { A: 1, B: 1 }; 
+        let hasServedThisSet = { A: true, B: false }; 
+        let themes = { A: 'red', B: 'blue' };
+        let isSwapped = false; 
+        
+        let scoreHistory = {
+            1: { A: null, B: null },
+            2: { A: null, B: null },
+            3: { A: null, B: null },
+            4: { A: null, B: null },
+            5: { A: null, B: null }
+        };
+
+        const THEME_CLASSES = ['red', 'blue', 'yellow', 'green'];
+
+        window.onload = () => {
+            updateUI();
+        };
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function changeSet(amount) {
+            saveCurrentSetScore();
+            
+            currentSet += amount;
+            if (currentSet < 1) currentSet = 1;
+            if (currentSet > 5) currentSet = 5; 
+            
+            if (currentSet > highestSetReached) {
+                highestSetReached = currentSet;
+            }
+
+            document.getElementById('set-display').innerText = `${currentSet} SET`;
+            
+            // 세트 변경 시 서브 1번으로 자동 리셋
+            currentServer.A = 1;
+            currentServer.B = 1;
+            hasServedThisSet = { A: currentServe === 'A', B: currentServe === 'B' };
+            
+            loadSetScore();
+            updateHistoryUI();
+            updateUI();
+        }
+        
+        function saveCurrentSetScore() {
+            scoreHistory[currentSet].A = points.A;
+            scoreHistory[currentSet].B = points.B;
+        }
+
+        function loadSetScore() {
+            points.A = scoreHistory[currentSet].A !== null ? scoreHistory[currentSet].A : 0;
+            points.B = scoreHistory[currentSet].B !== null ? scoreHistory[currentSet].B : 0;
+        }
+
+        // 세트 스코어 자동 계산 로직
+        function calculateSetScores() {
+            let winsA = 0;
+            let winsB = 0;
+
+            for (let i = 1; i <= 5; i++) {
+                let pA = scoreHistory[i].A;
+                let pB = scoreHistory[i].B;
+
+                if (pA !== null && pB !== null) {
+                    let winner = null;
+                    const target = (i === 5) ? 15 : 25;
+
+                    // 1. 배구 정규 룰
+                    if (pA >= target && (pA - pB) >= 2) winner = 'A';
+                    else if (pB >= target && (pB - pA) >= 2) winner = 'B';
+                    
+                    // 2. 변칙 룰 지원 (다음 세트로 넘어갔을 경우 무조건 높은 팀이 승리)
+                    if (!winner && i < highestSetReached) {
+                        if (pA > pB) winner = 'A';
+                        else if (pB > pA) winner = 'B';
+                    }
+
+                    if (winner === 'A') winsA++;
+                    else if (winner === 'B') winsB++;
+                }
+            }
+            
+            setScores.A = winsA;
+            setScores.B = winsB;
+        }
+
+        function changePoint(team, amount) {
+            points[team] = Math.max(0, points[team] + amount);
+            scoreHistory[currentSet][team] = points[team];
+            
+            if (amount > 0) {
+                if (currentServe !== team) {
+                    currentServe = team;
+                    if (!hasServedThisSet[team]) {
+                        hasServedThisSet[team] = true;
+                    } else {
+                        currentServer[team] = (currentServer[team] % 7) + 1;
+                    }
+                } else {
+                    currentServer[team] = (currentServer[team] % 7) + 1;
+                }
+            }
+            
+            updateHistoryUI();
+            updateUI();
+        }
+
+        function resetPoints() {
+            points.A = 0;
+            points.B = 0;
+            scoreHistory[currentSet].A = 0;
+            scoreHistory[currentSet].B = 0;
+            currentServer = { A: 1, B: 1 };
+            hasServedThisSet = { A: currentServe === 'A', B: currentServe === 'B' };
+            updateHistoryUI();
+            updateUI();
+        }
+
+        function toggleServe() {
+            currentServe = currentServe === 'A' ? 'B' : 'A';
+            if (points.A === 0 && points.B === 0) {
+                hasServedThisSet = { A: currentServe === 'A', B: currentServe === 'B' };
+            }
+            updateUI();
+        }
+
+        function swapCourts() {
+            isSwapped = !isSwapped;
+            const panelA = document.getElementById('panel-A');
+            const panelB = document.getElementById('panel-B');
+            
+            if (isSwapped) {
+                panelA.classList.remove('order-1');
+                panelA.classList.add('order-3');
+                
+                panelB.classList.remove('order-3');
+                panelB.classList.add('order-1');
+            } else {
+                panelA.classList.remove('order-3');
+                panelA.classList.add('order-1');
+                
+                panelB.classList.remove('order-1');
+                panelB.classList.add('order-3');
+            }
+        }
+
+        // 테마 색상 및 팀명 변경 로직
+        function setTheme(team, color) {
+            const panel = document.getElementById(`panel-${team}`);
+            const select = document.getElementById(`select-${team}`);
+            const nameInput = document.getElementById(`name-${team}`);
+            const btnMinus = document.getElementById(`btn-minus-${team}`);
+            const btnPlus = document.getElementById(`btn-plus-${team}`);
+
+            THEME_CLASSES.forEach(c => {
+                panel.classList.remove(`theme-${c}`);
+                if(select) select.classList.remove(`text-theme-${c}`);
+                nameInput.classList.remove(`text-theme-${c}`);
+                btnMinus.classList.remove(`btn-minus-${c}`);
+                btnPlus.classList.remove(`btn-plus-${c}`);
+            });
+
+            themes[team] = color;
+            panel.classList.add(`theme-${color}`);
+            if(select) select.classList.add(`text-theme-${color}`);
+            nameInput.classList.add(`text-theme-${color}`);
+            btnMinus.classList.add(`btn-minus-${color}`);
+            btnPlus.classList.add(`btn-plus-${color}`);
+        }
+
+        function handleNameSelect(team) {
+            const select = document.getElementById(`select-${team}`);
+            const input = document.getElementById(`name-${team}`);
+            const icon = document.getElementById(`icon-select-${team}`);
+            const cancelBtn = document.getElementById(`cancel-custom-${team}`);
+            
+            if (select.value === 'custom') {
+                select.classList.add('hidden');
+                icon.classList.add('hidden');
+                
+                input.classList.remove('hidden');
+                cancelBtn.classList.remove('hidden');
+                input.value = ''; 
+                input.focus();
+            } else {
+                input.value = select.value;
+            }
+        }
+        
+        function syncCustomName(team) {
+            const input = document.getElementById(`name-${team}`);
+            // 필요에 따라 빈칸 처리 가능
+        }
+
+        function revertToSelect(team) {
+            const select = document.getElementById(`select-${team}`);
+            const input = document.getElementById(`name-${team}`);
+            const icon = document.getElementById(`icon-select-${team}`);
+            const cancelBtn = document.getElementById(`cancel-custom-${team}`);
+            
+            input.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+            
+            select.classList.remove('hidden');
+            icon.classList.remove('hidden');
+            
+            select.value = (team === 'A') ? '1반' : '2반'; 
+            input.value = select.value;
+        }
+
+        function showConfirmModal() {
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+        
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        function resetAll() {
+            currentSet = 1;
+            highestSetReached = 1;
+            setScores = { A: 0, B: 0 };
+            points = { A: 0, B: 0 };
+            currentServe = 'A';
+            currentServer = { A: 1, B: 1 };
+            hasServedThisSet = { A: true, B: false };
+            
+            if (isSwapped) swapCourts();
+            
+            scoreHistory = {
+                1: { A: null, B: null },
+                2: { A: null, B: null },
+                3: { A: null, B: null },
+                4: { A: null, B: null },
+                5: { A: null, B: null }
+            };
+            
+            document.getElementById('set-display').innerText = `1 SET`;
+            document.getElementById('set-score-A').innerText = '0';
+            document.getElementById('set-score-B').innerText = '0';
+            
+            updateHistoryUI();
+            updateUI();
+            closeConfirmModal();
+        }
+        
+        function updateHistoryUI() {
+            ['A', 'B'].forEach(team => {
+                for (let i = 1; i <= 5; i++) {
+                    const cell = document.getElementById(`history-${team}-${i}`);
+                    if (scoreHistory[i][team] !== null) {
+                        cell.innerText = scoreHistory[i][team];
+                    } else {
+                        cell.innerText = '-';
+                    }
+                    
+                    if (i === currentSet) {
+                        cell.classList.add('active-set');
+                    } else {
+                        cell.classList.remove('active-set');
+                    }
+                }
+            });
+        }
+
+        function updateUI() {
+            calculateSetScores();
+            document.getElementById('set-score-A').innerText = setScores.A;
+            document.getElementById('set-score-B').innerText = setScores.B;
+
+            document.getElementById('point-A').innerText = points.A;
+            document.getElementById('point-B').innerText = points.B;
+
+            document.getElementById('server-num-A').innerText = currentServer.A + '번';
+            document.getElementById('server-num-B').innerText = currentServer.B + '번';
+
+            const badgeA = document.getElementById('serve-badge-A');
+            const badgeB = document.getElementById('serve-badge-B');
+            
+            if (currentServe === 'A') {
+                badgeA.classList.add('serve-active');
+                badgeB.classList.remove('serve-active');
+            } else {
+                badgeA.classList.remove('serve-active');
+                badgeB.classList.add('serve-active');
+            }
+        }
+    </script>
+</body>
+</html>
