@@ -109,47 +109,94 @@
             color: #facc15;
         }
 
+        /* =======================================================
+           전체화면 CSS (어떤 모니터/화면비율에서도 완벽한 반응형 꽉 찬 레이아웃)
+           ======================================================= */
         :fullscreen body {
             padding: 0 !important;
             margin: 0 !important;
+            display: flex;
+            align-items: center;
             justify-content: center;
             overflow: hidden; 
+            background-color: #0f172a;
         }
         :fullscreen #main-container {
             height: 100vh;
             width: 100vw;
-            max-width: 100% !important; 
-            padding: 2vh 2vw;
+            max-width: none !important; 
+            padding: 2vmin 3vmin;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 2vh;
+            gap: 2vmin;
             margin: 0;
+            box-sizing: border-box;
         }
-        :fullscreen .top-controls { margin-bottom: 1vh !important; }
-        :fullscreen #set-display { font-size: 14vh !important; } 
-        :fullscreen .top-controls button { width: 12vh !important; height: 12vh !important; font-size: 6vh !important; }
         
-        :fullscreen .team-name-input { font-size: 11vh !important; margin-bottom: 0 !important; }
-        :fullscreen .name-wrapper { margin-bottom: 2vh !important; height: 12vh !important; }
+        /* 상단 세트 및 화살표 조작부 */
+        :fullscreen .top-controls { margin-bottom: 0 !important; gap: 4vmin !important; }
+        :fullscreen #set-display { font-size: min(10vw, 14vh) !important; line-height: 1; } 
+        :fullscreen .top-controls button { width: min(8vw, 10vh) !important; height: min(8vw, 10vh) !important; font-size: min(4vw, 5vh) !important; }
         
-        :fullscreen .bg-gray-900\/60 { padding: 2vh 3vw !important; } 
-        :fullscreen .set-score-text { font-size: 4vh !important; }
-        :fullscreen .set-score-val { font-size: 14vh !important; } 
+        /* 양 팀 패널 영역 */
+        :fullscreen #teams-wrapper { gap: 3vmin !important; }
+        :fullscreen .glass-panel { padding: 3vmin !important; border-radius: 3vmin !important; border-top-width: 1.5vmin !important; }
         
-        :fullscreen .rally-point { font-size: 52vh !important; line-height: 0.8 !important; margin: auto 0 !important; } 
+        /* 서브 뱃지 (왼쪽 고정 및 글꼴 자동 비율 맞춤) */
+        :fullscreen .serve-badge { 
+            top: 2vmin !important; 
+            left: 2vmin !important; 
+            padding: 1.5vmin 2vmin !important;
+            transform: none !important;
+            border-radius: 1.5vmin !important;
+            gap: 0.5vmin !important;
+        }
+        :fullscreen .serve-badge i { font-size: min(2vw, 2.5vh) !important; }
+        :fullscreen .serve-badge .text-xs { font-size: min(2vw, 2.5vh) !important; }
+        :fullscreen .serve-badge span { font-size: min(2.5vw, 3.5vh) !important; min-width: 0 !important; padding: 0.5vmin 1.5vmin !important; border-radius: 1vmin !important; }
         
-        :fullscreen .point-btn-group button { padding-top: 5vh !important; padding-bottom: 5vh !important; font-size: 9vh !important; }
+        /* 팀 이름 래퍼 및 폰트 */
+        :fullscreen .name-wrapper { margin-bottom: 2vmin !important; height: min(8vw, 12vh) !important; }
+        :fullscreen .team-name-input { font-size: min(6vw, 9vh) !important; margin-bottom: 0 !important; }
+        :fullscreen .name-wrapper button { width: min(4vw, 6vh) !important; height: min(4vw, 6vh) !important; font-size: min(2vw, 3vh) !important; }
         
-        :fullscreen .center-controls { flex-direction: column !important; justify-content: space-evenly; width: 12vw !important; gap: 2vh; }
-        :fullscreen .center-controls button { padding: 3vh 1vw !important; font-size: 3.5vh !important; height: 100%; margin: 0; gap: 1.5vh; }
-        :fullscreen .center-controls button i { font-size: 5vh !important; }
+        /* 세트 스코어 텍스트 패널 */
+        :fullscreen .bg-gray-900\/60 { padding: 1.5vmin 3vmin !important; margin-bottom: 2vmin !important; border-radius: 2vmin !important; } 
+        :fullscreen .set-score-text { font-size: min(2.5vw, 3.5vh) !important; }
+        :fullscreen .set-score-val { font-size: min(8vw, 12vh) !important; line-height: 1 !important; } 
         
-        :fullscreen .serve-badge { font-size: 3.5vh !important; padding: 2vh 3vw !important; top: 4vh; right: 4vh; transform: scale(1.4); transform-origin: top right; }
+        /* 중앙 메인 랠리 점수 (화면 벗어나지 않는 선에서 최대 크기) */
+        :fullscreen .rally-point { font-size: min(25vw, 42vh) !important; line-height: 0.8 !important; margin: auto 0 !important; } 
         
-        :fullscreen .set-score-table { margin-bottom: 2vh !important; }
-        :fullscreen .set-score-table td { font-size: 4.5vh !important; padding: 2vh !important; }
-        :fullscreen .set-score-table th { font-size: 2.5vh !important; }
+        /* 각 세트별 기록 테이블 */
+        :fullscreen .set-score-table { margin-bottom: 2vmin !important; border-spacing: 1vmin !important; }
+        :fullscreen .set-score-table td { font-size: min(3vw, 4vh) !important; padding: 1vmin !important; border-radius: 1vmin !important; }
+        :fullscreen .set-score-table th { font-size: min(1.5vw, 2.5vh) !important; padding-bottom: 0.5vmin !important; }
+        
+        /* +/- 득점 버튼 그룹 */
+        :fullscreen .point-btn-group { gap: 2vmin !important; }
+        :fullscreen .point-btn-group button { border-radius: 2vmin !important; }
+        :fullscreen [id^="btn-minus"] { padding-top: 2vmin !important; padding-bottom: 2vmin !important; font-size: min(5vw, 7vh) !important; }
+        :fullscreen [id^="btn-plus"] { padding-top: 2vmin !important; padding-bottom: 2vmin !important; font-size: min(7vw, 10vh) !important; }
+        
+        /* 중앙 컨트롤 조작부 (버튼들) */
+        :fullscreen .center-controls { 
+            width: min(12vw, 18vh) !important; 
+            flex-direction: column !important; 
+            justify-content: space-evenly !important; 
+            gap: 1.5vmin !important; 
+        }
+        :fullscreen .center-controls button { 
+            flex: 1 !important; 
+            padding: 1vmin !important; 
+            font-size: min(2vw, 2.5vh) !important; 
+            height: auto !important; 
+            margin: 0 !important; 
+            border-radius: 1.5vmin !important; 
+            gap: 1vmin !important; 
+        }
+        :fullscreen .center-controls button i { font-size: min(3vw, 4vh) !important; }
     </style>
 </head>
 <body class="p-4 relative">
