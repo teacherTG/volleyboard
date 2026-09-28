@@ -508,10 +508,12 @@
         }
 
         function changePoint(team, amount) {
-            points[team] = Math.max(0, points[team] + amount);
-            scoreHistory[currentSet][team] = points[team];
-            
+            if (amount < 0 && points[team] === 0) return; // 0점 미만 방지
+
             if (amount > 0) {
+                points[team]++;
+                scoreHistory[currentSet][team] = points[team];
+                
                 if (currentServe !== team) {
                     currentServe = team;
                     if (!hasServedThisSet[team]) {
@@ -521,6 +523,28 @@
                     }
                 } else {
                     currentServer[team] = (currentServer[team] % 7) + 1;
+                }
+            } else {
+                // 점수 내리기 (잘못 누름 취소)
+                points[team]--;
+                scoreHistory[currentSet][team] = points[team];
+                
+                if (points[team] === 0) {
+                    // 점수가 0이 되면 서브 번호 1번으로 리셋
+                    currentServer[team] = 1;
+                    hasServedThisSet[team] = false;
+                    
+                    // 양 팀 모두 0점이 되면 완전 초기 첫 서브 상태로 세팅
+                    if (points.A === 0 && points.B === 0) {
+                        currentServe = 'A';
+                        hasServedThisSet.A = true;
+                    }
+                } else {
+                    // 서브 번호 1칸 뒤로 되돌리기
+                    currentServer[team] = currentServer[team] - 1;
+                    if (currentServer[team] < 1) {
+                        currentServer[team] = 7;
+                    }
                 }
             }
             
